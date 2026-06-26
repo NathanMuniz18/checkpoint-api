@@ -129,7 +129,7 @@ class SolicitarRedefinicaoSenhaSerializer(serializers.Serializer):
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
         
-        link_reset = f"https://nathanmuniz18.github.io/checkpoint-web/redefinir-senha?uid={uid}&token={token}"
+        link_reset = f"https://nathanmuniz18.github.io/checkpoint-web/#/redefinir-senha?uid={uid}&token={token}"
         
         send_mail(
             subject="Redefinição de Senha - Checkpoint",
