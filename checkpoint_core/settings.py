@@ -25,7 +25,11 @@ SECRET_KEY = "django-insecure-2h&1!#vejkko8kc3ab_&vuq1@o)36qymqgc19y1m!&%$x=u+fy
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "checkpoint-api-7z0m.onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # Application definition
