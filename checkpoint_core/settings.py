@@ -134,7 +134,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
 # 1. Liberar acesso do Frontend para a API
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "https://nathanmuniz18.github.io",
+]
 
 # 2. Configurações do Django Rest Framework
 REST_FRAMEWORK = {
