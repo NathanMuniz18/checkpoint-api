@@ -1,7 +1,11 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Persona
-
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.conf import settings
 
 class RegistroUsuarioSerializer(serializers.ModelSerializer):
     """
@@ -103,3 +107,67 @@ class TrocarSenhaSerializer(serializers.Serializer):
             raise serializers.ValidationError({"nova_senha_confirm": "As novas senhas não coincidem."}) 
 
         return data
+
+
+    
+class SolicitarRedefinicaoSenhaSerializer(serializers.Serializer):
+    """
+    Recebe o e-mail do usuário, gera o token nativo do Django e envia o link.
+    """
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Não existe usuário com este e-mail.")
+        return value
+
+    def save(self):
+        email = self.validated_data['email']
+        user = User.objects.get(email=email)
+        
+        # Gera o identificador do usuário e o token de segurança do Django
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        
+        link_reset = f"https://nathanmuniz18.github.io/checkpoint-web/redefinir-senha?uid={uid}&token={token}"
+        
+        send_mail(
+            subject="Redefinição de Senha - Checkpoint",
+            message=f"Olá {user.username},\n\nAcesse o link abaixo para redefinir sua senha:\n{link_reset}\n\nSe você não solicitou isso, ignore este e-mail.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+
+class RedefinirSenhaEmailSerializer(serializers.Serializer):
+    """
+    Recebe o uid e token do e-mail junto com a nova senha para validar e salvar.
+    """
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    nova_senha = serializers.CharField(write_only=True)
+    nova_senha_confirm = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        if data['nova_senha'] != data['nova_senha_confirm']:
+            raise serializers.ValidationError({"nova_senha_confirm": "As senhas não coincidem."})
+        
+        try:
+            # Decodifica o ID do usuário e busca no banco
+            uid_decoded = force_str(urlsafe_base64_decode(data['uid']))
+            user = User.objects.get(pk=uid_decoded)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            raise serializers.ValidationError({"uid": "Link de redefinição inválido ou corrompido."})
+        
+        # Valida se o token pertence a este usuário e se ainda está no prazo
+        if not default_token_generator.check_token(user, data['token']):
+            raise serializers.ValidationError({"token": "Token inválido ou expirado."})
+        
+        # Guarda o usuário no contexto para o método save usar
+        self.context['user'] = user
+        return data
+
+    def save(self):
+        user = self.context['user']
+        user.set_password(self.validated_data['nova_senha'])
+        user.save()

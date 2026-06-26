@@ -5,7 +5,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiExample
 
-from .serializers import RegistroUsuarioSerializer, PerfilSerializer, TrocarSenhaSerializer
+from .serializers import RegistroUsuarioSerializer, PerfilSerializer, TrocarSenhaSerializer,SolicitarRedefinicaoSenhaSerializer, RedefinirSenhaEmailSerializer
+
 
 @extend_schema(
     summary="Registra um novo usuário",
@@ -198,4 +199,35 @@ def trocar_senha(request):
         request.user.save()
         return Response({"mensagem": "Senha alterada com sucesso!"}, status=status.HTTP_200_OK)
 
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@extend_schema(
+    summary="Solicita recuperação de senha por e-mail",
+    description="Gera o token de segurança do Django e simula o envio do e-mail com o link.",
+    tags=["Usuários - Autenticação"],
+    request=SolicitarRedefinicaoSenhaSerializer,
+)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def esqueci_senha(request):
+    serializer = SolicitarRedefinicaoSenhaSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"mensagem": "Se o e-mail for válido, enviaremos as instruções."}, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    summary="Redefine a senha via token de e-mail",
+    description="Valida o uid e o token gerados pelo Django e aplica a nova senha informada.",
+    tags=["Usuários - Autenticação"],
+    request=RedefinirSenhaEmailSerializer,
+)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def redefinir_senha(request):
+    serializer = RedefinirSenhaEmailSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"mensagem": "Sua senha foi redefinida com sucesso!"}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

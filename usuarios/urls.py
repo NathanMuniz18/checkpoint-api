@@ -5,6 +5,10 @@ urlpatterns = [
     # Registro de novo usuário (público)
     path('registrar/', views.registrar_usuario, name='registrar_usuario'),
 
+    # Recuperação de senha via e-mail (públicos)
+    path('esqueci-senha/', views.esqueci_senha, name='esqueci_senha'),
+    path('redefinir-senha/', views.redefinir_senha, name='redefinir_senha'),
+
     # Perfil do usuário logado (protegido)
     path('perfil/', views.ver_perfil, name='ver_perfil'),
     path('perfil/atualizar/', views.atualizar_perfil, name='atualizar_perfil'),

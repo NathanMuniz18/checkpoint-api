@@ -154,3 +154,7 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API do backend do Checkpoint (G2)',
     'VERSION': '1.0.0',
 }
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'nathancosta.muniz@outlook.com'
