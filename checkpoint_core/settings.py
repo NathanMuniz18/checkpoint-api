@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -43,20 +44,20 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     # Nossos Apps
-    'usuarios',
-    'jogos',
+    "usuarios",
+    "jogos",
 
-    # (API, CORS, Swagger, JWT)
-    'rest_framework', # Framework web principal usado para criar as APIs RESTful
-    'corsheaders', # Biblioteca para lidar com CORS, liberando o acesso do Frontend (que estará em outra porta/site) à API
-    'drf_spectacular', # Gerador de esquema OpenAPI que cria a página de documentação automática (Swagger)
-    'rest_framework_simplejwt', # Biblioteca responsável por gerar, validar e renovar os JSON Web Tokens 
+    # API, CORS, Swagger, JWT
+    "rest_framework",
+    "corsheaders",
+    "drf_spectacular",
+    "rest_framework_simplejwt",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    'corsheaders.middleware.CorsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -126,43 +127,63 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# Static files
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
-# 1. Liberar acesso do Frontend para a API
+# CORS - libera o frontend para acessar a API
+
 CORS_ALLOWED_ORIGINS = [
     "https://nathanmuniz18.github.io",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
 
-# 2. Configurações do Django Rest Framework
+
+# Django Rest Framework
+
 REST_FRAMEWORK = {
-    # Define o Swagger como gerador de esquema padrão
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    
-    # Define o JWT como método de autenticação padrão
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    
-    # Define que as rotas serão protegidas por padrão
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
     ),
 }
 
-# 3. Informações da Documentação (Swagger)
+
+# Swagger / OpenAPI
+
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Checkpoint API',
-    'DESCRIPTION': 'API do backend do Checkpoint (G2)',
-    'VERSION': '1.0.0',
+    "TITLE": "Checkpoint API",
+    "DESCRIPTION": "API do backend do Checkpoint (G2)",
+    "VERSION": "1.0.0",
 }
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'nathancosta.muniz@outlook.com'
+# Email / SMTP
+# As credenciais reais ficam no Render, em Environment Variables.
+
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend",
+)
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False") == "True"
+
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DEFAULT_FROM_EMAIL",
+    EMAIL_HOST_USER,
+)
